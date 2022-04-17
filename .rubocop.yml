@@ -1,0 +1,340 @@
+require:
+  - rubocop-rails
+
+# 自動生成されるものはチェック対象から除外する
+AllCops:
+  Exclude:
+    - 'bin/*'
+    - 'db/schema.rb'
+    - 'node_modules/**/*'
+    - 'vendor/**/*' # rubocop config/default.yml
+    - 'test/dummy/bin/*'
+    - 'test/dummy/db/schema.rb'
+  DisplayCopNames: true
+  NewCops: enable
+
+##################### Layout ################################
+
+# メソッドチェーンの改行は末尾に . を入れる
+# REPL に貼り付けた際の暴発を防ぐため
+Layout/DotPosition:
+  EnforcedStyle: trailing
+
+# 桁揃えが綺麗にならないことが多いので migration は除外
+Layout/ExtraSpacing:
+  Exclude:
+    - "db/migrate/*.rb"
+
+# special_inside_parentheses (default) と比べて
+# * 横に長くなりづらい
+# * メソッド名の長さが変わったときに diff が少ない
+Layout/FirstArrayElementIndentation:
+  EnforcedStyle: consistent
+
+# ({ と hash を開始した場合に ( の位置にインデントさせる
+# そもそも {} が必要ない可能性が高いが Style/BracesAroundHashParameters はチェックしないことにしたので
+Layout/FirstHashElementIndentation:
+  EnforcedStyle: consistent
+
+# private/protected は一段深くインデントする
+Layout/IndentationConsistency:
+  EnforcedStyle: indented_internal_methods
+
+# * 警告 120文字
+# * 禁止 160文字
+# のイメージ
+# コメント行は無視
+Layout/LineLength:
+  Max: 160
+  IgnoredPatterns: ['(\A|\s)#']
+  Exclude:
+    - "config/initializers/doorkeeper.rb"
+    - "config/initializers/simple_form_bootstrap.rb"
+    - "db/migrate/*.rb"
+
+##################### Lint ##################################
+
+# ActiveRecord の scope の書き方で怒られちゃう
+Lint/AmbiguousBlockAssociation:
+  Enabled: false
+
+# RuntimeError は「特定の Error を定義できない場合」なので、
+# 定義できるエラーは RuntimeError ではなく StandardError を継承する。
+Lint/InheritException:
+  EnforcedStyle: standard_error
+
+# This cop checks unexpected overrides of the Struct built-in methods via Struct.new.
+Lint/StructNewOverride:
+  Enabled: true
+
+# * 同名のメソッドがある場合にローカル変数に `_` を付ける
+# * 一時変数として `_` を付ける
+# というテクニックは頻出する
+Lint/UnderscorePrefixedVariableName:
+  Enabled: false
+
+# 子クラスで実装させるつもりのメソッドで引っかかるので
+Lint/UnusedMethodArgument:
+  Enabled: false
+
+##################### Metrics ##################################
+
+# 30 まではギリギリ許せる範囲だったけど
+# リリースごとに 3 ずつぐらい下げていきます。20 まで下げたい。
+Metrics/AbcSize:
+  Max: 24
+  Exclude:
+
+# Gemfile, Guardfile は DSL 的で基本的に複雑にはならないので除外
+# routes は巨大な block 不可避なので除外
+Metrics/BlockLength:
+  Exclude:
+    - "Rakefile"     # default
+    - "**/*.rake"    # default
+    - "spec/**/*.rb" # default
+    - "Gemfile"
+    - "Guardfile"
+    - "app/grape/api/*.rb"
+    - "config/environments/*.rb"
+    - "config/environments/development.rb"
+    - "config/initializers/devise.rb"
+    - "config/initializers/simple_form_bootstrap.rb"
+    - "config/routes.rb"
+    - "config/routes/**/*.rb"
+    - "*.gemspec"
+
+# 100 は超えちゃう？
+Metrics/ClassLength:
+  Max: 200
+
+# 6 は強すぎるので緩める
+Metrics/CyclomaticComplexity:
+  Max: 10
+
+# 20 行超えるのは migration ファイル以外滅多に無い
+Metrics/MethodLength:
+  Max: 20
+  Exclude:
+    - "db/migrate/*.rb"
+
+# 分岐の数。ガード句を多用しているとデフォルト 7 だと厳しい
+Metrics/PerceivedComplexity:
+  Max: 8
+
+##################### Naming #################################
+# has_ から始まるメソッドは許可する
+Naming/PredicateName:
+  ForbiddenPrefixes:
+    - "is_"
+    - "have_"
+  NamePrefix:
+    - "is_"
+    - "have_"
+
+##################### Style ##################################
+
+# レキシカルスコープの扱いが alias_method の方が自然。
+# https://ernie.io/2014/10/23/in-defense-of-alias/ のように
+# 問題になる場合は自分で緩める。
+Style/Alias:
+  EnforcedStyle: prefer_alias_method
+
+# redirect_to xxx and return のイディオムを維持したい
+Style/AndOr:
+  EnforcedStyle: conditionals
+
+# 日本語のコメントを許可する
+Style/AsciiComments:
+  Enabled: false
+
+# do .. end から更にメソッドチェーンすると見づらいので
+# auto-correct せず、自分で修正する
+# spec 内は見た目が綺麗になるので許可
+Style/BlockDelimiters:
+  AutoCorrect: false
+  Exclude:
+    - "spec/**/*"
+
+# scope が違うとか親 module の存在確認が必要とかデメリットはあるが、
+# namespace 付きのクラスはかなり頻繁に作るので簡単に書きたい。
+Style/ClassAndModuleChildren:
+  Enabled: false
+
+# Style/CollectionMethods 自体は無効になっているのだが、
+#   https://github.com/bbatsov/rubocop/issues/1084
+#   https://github.com/bbatsov/rubocop/issues/1334
+# Performance/Detect がこの設定値を見るので PreferredMethods だけ変更しておく。
+#
+# デフォルト値から変えたのは
+#   find -> detect
+#     ActiveRecord の find と間違えやすいため
+#   reduce -> inject
+#     detect, reject, select と並べたときに韻を踏んでいるため。
+#     collect -> map を維持しているのは文字数が圧倒的に少ないため。
+Style/CollectionMethods:
+  PreferredMethods:
+    detect: "detect"
+    find: "detect"
+    inject: "inject"
+    reduce: "inject"
+
+# ドキュメントの無い public class を許可する
+Style/Documentation:
+  Enabled: false
+
+# !! のイディオムは積極的に使う
+Style/DoubleNegation:
+  Enabled: false
+
+# case
+# when ios?
+# when android?
+# end
+# のようなものは case の方が網羅の表現力が高い
+Style/EmptyCaseCondition:
+  Enabled: false
+
+# 明示的に else で nil を返すのは分かりやすいので許可する
+Style/EmptyElse:
+  EnforcedStyle: empty
+
+# いずれかに揃えるのならば `sprintf` や `format` より String#% が好きです
+Style/FormatString:
+  EnforcedStyle: percent
+
+# まだ対応するには早い
+Style/FrozenStringLiteralComment:
+  Enabled: false
+
+# if 文の中に 3 行程度のブロックを書くぐらいは許容した方が現実的
+# NOTE: https://github.com/bbatsov/rubocop/commit/29945958034db13af9e8ff385ec58cb9eb464596
+#       の影響で、if 文の中身が 1 行の場合に警告されるようになっている。
+#       Style/IfUnlessModifier の設定見てくれないかなぁ？ (v0.36.0)
+Style/GuardClause:
+  MinBodyLength: 5
+
+# option 等、明示的にハッシュにした方が分かりやすい場合もある
+Style/HashEachMethods:
+  Enabled: false
+
+# rake タスクの順序の hash は rocket を許可する
+Style/HashSyntax:
+  Exclude:
+    - "**/*.rake"
+    - "Rakefile"
+
+# 明示的に
+Style/HashTransformKeys:
+  Enabled: false
+
+# 明示的に
+Style/HashTransformValues:
+  Enabled: false
+
+# 平たくしてしまうと条件のグルーピングが脳内モデルとズレやすい
+Style/IfInsideElse:
+  Enabled: false
+
+# 条件式の方を意識させたい場合には後置の if/unless を使わない方が分かりやすい
+Style/IfUnlessModifier:
+  Enabled: false
+
+# scope 等は複数行でも lambda ではなく ->{} で揃えた方が見た目が綺麗
+Style/Lambda:
+  EnforcedStyle: literal
+
+# end.some_method とチェインするのはダサい
+# Style/BlockDelimiters と相性が悪いけど、頑張ってコードを修正してください
+Style/MethodCalledOnDoEndBlock:
+  Enabled: true
+
+# 1_000_000 と区切り文字が 2 個以上必要になる場合のみ _ 区切りを必須にする
+Style/NumericLiterals:
+  MinDigits: 7
+
+# foo.positive? は foo > 0 に比べて意味が曖昧になる
+# foo.zero? は許可したいけどメソッドごとに指定できないので一括で disable に
+Style/NumericPredicate:
+  Enabled: false
+
+# 正規表現にマッチさせた時の特殊変数の置き換えは Regex.last_match ではなく
+# 名前付きキャプチャを使って参照したいので auto-correct しない
+Style/PerlBackrefs:
+  AutoCorrect: false
+
+# Hash#has_key? の方が key? よりも意味が通る
+Style/PreferredHashMethods:
+  EnforcedStyle: verbose
+
+# 特に model 内において、ローカル変数とメソッド呼び出しの区別をつけた方が分かりやすい場合が多い
+Style/RedundantSelf:
+  Enabled: false
+
+# 受け取り側で multiple assignment しろというのを明示
+Style/RedundantReturn:
+  AllowMultipleReturnValues: true
+
+# 無理して使うモンじゃない
+Style/SafeNavigation:
+  Enabled: false
+
+# spec 内は見た目が綺麗になるので許可
+Style/Semicolon:
+  Exclude:
+    - "spec/**/*"
+
+# いくらなんでも inject { |a, e| } は短すぎるので分かりやすい名前をつけたい
+Style/SingleLineBlockParams:
+  Enabled: false
+
+# auto-correct 時に Style/StringLiterals とカニバって無限ループになる (v0.28.0)
+Style/StringLiteralsInInterpolation:
+  Enabled: false
+
+# 三項演算子は分かりやすく使いたい。
+# () を外さない方が条件式が何なのか読み取りやすいと感じる。
+Style/TernaryParentheses:
+  Enabled: false
+
+# 複数行の場合はケツカンマを入れる
+Style/TrailingCommaInArrayLiteral:
+  EnforcedStyleForMultiline: comma
+
+# 複数行の場合はケツカンマを入れる
+Style/TrailingCommaInHashLiteral:
+  EnforcedStyleForMultiline: comma
+
+##################### Rails ####################################
+Rails:
+  Enabled: true
+
+# tag()にはblock無いからオートコレクト事故防止
+Rails/ContentTag:
+  AutoCorrect: false
+  Exclude:
+    - app/inputs/display_input.rb
+
+# テーブル作成時タイムスタンプカラムが必要
+Rails/CreateTableWithTimestamps:
+  Exclude:
+    - "db/migrate/*_acts_as_taggable_on_migration.acts_as_taggable_on_engine.rb"
+
+# putsを許可
+Rails/Output:
+  Exclude:
+    - "db/seeds.rb"
+
+# slug とか created_by とか、NOT NULL だが create_table 時に
+# default 値を定義できないカラムは存在する。
+Rails/NotNullColumn:
+  Enabled: false
+
+# method_missing を隠したい場合は respond_to? を使うべき
+Rails/SafeNavigation:
+  ConvertTry: true
+
+# valid? チェックし忘れを防ぎたい
+# auto-correctはしない
+Rails/SaveBang:
+  AutoCorrect: false
+  Enabled: true
