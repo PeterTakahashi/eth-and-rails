@@ -31,3 +31,11 @@
 
 en:
   hello: "Hello world"
+  controller: &controller
+    sessions:
+      logged_in_successfully: Logged in successfully!
+      no_such_user_exists_try_to_sign_up: No such user exists, try to sign up!
+      logged_out: Logged out.
+    users:
+      successfully_created_an_account_you_may_now_log_in: Successfully created an account, you may now log in.
+      account_already_exists_try_to_log_in_instead: Account already exists! Try to log in instead!

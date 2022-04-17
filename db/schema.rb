@@ -17,6 +17,9 @@ ActiveRecord::Schema[7.0].define(version: 2021_09_23_091236) do
     t.string "eth_nonce"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["eth_address"], name: "index_users_on_eth_address", unique: true
+    t.index ["eth_nonce"], name: "index_users_on_eth_nonce", unique: true
+    t.index ["username"], name: "index_users_on_username", unique: true
   end
 
 end

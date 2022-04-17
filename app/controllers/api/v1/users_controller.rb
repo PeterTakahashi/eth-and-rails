@@ -20,7 +20,7 @@ class Api::V1::UsersController < ApiController
     end
 
     # do not expose full user object; just the nonce
-    if user and user.id > 0
+    if user && user.id > 0
       response = [eth_nonce: user.eth_nonce]
     end
 

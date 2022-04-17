@@ -6,7 +6,7 @@ class SessionsController < ApplicationController
   def new; end
 
   # logs in a user using an ethereum account
-  def create
+  def create # rubocop:disable Metrics/AbcSize, Metrics/MethodLength, Metrics/PerceivedComplexity
     # users are indexed by eth address here
     user = User.find_by(eth_address: params[:eth_address])
 
@@ -26,17 +26,17 @@ class SessionsController < ApplicationController
 
         # we embedded the time of the request in the signed message and make sure
         # it's not older than 5 minutes. expired signatures will be rejected.
-        custom_title, request_time, signed_nonce = message.split(',')
-        request_time = Time.at(request_time.to_f / 1000.0)
+        _custom_title, request_time, signed_nonce = message.split(',')
+        request_time = Time.zone.at(request_time.to_f / 1000.0)
         expiry_time = request_time + 300
 
         # also make sure the parsed request_time is sane
         # (not nil, not 0, not off by orders of magnitude)
         sane_checkpoint = Time.parse '2021-01-01 00:00:00 UTC'
-        if request_time and request_time > sane_checkpoint and Time.now < expiry_time
+        if request_time && request_time > sane_checkpoint && Time.zone.now < expiry_time
 
           # enforce that the signed nonce is the one we have on record
-          if signed_nonce.eql? user_nonce
+          if signed_nonce.eql? user_nonce # rubocop:disable Metrics/BlockNesting
 
             # recover address from signature
             signature_pubkey = Eth::Signature.personal_recover message, signature
@@ -44,7 +44,7 @@ class SessionsController < ApplicationController
 
             # if the recovered address matches the user address on record, proceed
             # (uses downcase to ignore checksum mismatch)
-            if user_address.downcase.eql? signature_address.to_s.downcase
+            if user_address.downcase.eql? signature_address.to_s.downcase # rubocop:disable Metrics/BlockNesting
 
               # if this is true, the user is cryptographically authenticated!
               session[:user_id] = user.id
@@ -52,10 +52,10 @@ class SessionsController < ApplicationController
               # rotate the random nonce to prevent signature spoofing
               # (unimplemented: we do not use this, yet, but let's update it anyways)
               user.eth_nonce = SecureRandom.uuid
-              user.save
+              user.save!
 
               # send the logged in user back home
-              redirect_to root_path, notice: 'Logged in successfully!'
+              redirect_to root_path, notice: I18n.t('sessoins.logged_in_successfully')
             else
 
               # signature address does not match our records
@@ -83,7 +83,7 @@ class SessionsController < ApplicationController
     else
 
       # user not found in database
-      redirect_to signup_path, alert: 'No such user exists, try to sign up!'
+      redirect_to signup_path, alert: I18n.t('sessoins.no_such_user_exists_try_to_sign_up')
     end
   end
 
@@ -91,6 +91,6 @@ class SessionsController < ApplicationController
   def destroy
     # deletes user session
     session[:user_id] = nil
-    redirect_to root_path, notice: 'Logged out.'
+    redirect_to root_path, notice: I18n.t('sessoins.logged_out')
   end
 end

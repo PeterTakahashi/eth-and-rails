@@ -15,7 +15,7 @@ class ApplicationController < ActionController::Base
   end
 
   # need to generate new nonce for sign ups
-  def get_new_nonce
+  def get_new_nonce # rubocop:disable Naming/AccessorMethodName
     SecureRandom.uuid
   end
 end

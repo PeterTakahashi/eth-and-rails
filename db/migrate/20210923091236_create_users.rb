@@ -5,6 +5,10 @@ class CreateUsers < ActiveRecord::Migration[6.1]
       t.string :eth_address
       t.string :eth_nonce
       t.timestamps
+
+      t.index [:username], unique: true
+      t.index [:eth_address], unique: true
+      t.index [:eth_nonce], unique: true
     end
   end
 end

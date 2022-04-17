@@ -48,6 +48,8 @@ group :development do
   gem 'rack-mini-profiler', '~> 2.0'
   # Spring speeds up development by keeping your application running in the background. Read more: https://github.com/rails/spring
   gem 'spring'
+
+  gem 'annotate'
 end
 
 group :test do
@@ -67,5 +69,4 @@ gem 'rails-i18n'
 gem 'ransack'
 gem 'rubocop', require: false, group: :development
 gem 'rubocop-rails', require: false, group: :development
-gem 'simple_form'
 gem 'tzinfo-data', platforms: %i[mingw mswin x64_mingw jruby]

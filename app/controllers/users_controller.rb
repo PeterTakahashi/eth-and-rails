@@ -7,12 +7,12 @@ class UsersController < ApplicationController
   end
 
   # create a new user based on user input
-  def create
+  def create # rubocop:disable Metrics/MethodLength, Metrics/PerceivedComplexity,  Metrics/AbcSize
     # create new user from allowed params
     @user = User.new(user_params)
 
     # only proceed with pretty names
-    if @user and @user.username and @user.username.size > 0
+    if @user && @user.username && @user.username.present?
 
       # create randome nonce
       @user.eth_nonce = SecureRandom.uuid
@@ -30,14 +30,14 @@ class UsersController < ApplicationController
         if address.valid?
 
           # save to database
-          if @user.save
+          if @user.save! # rubocop:disable Metrics/BlockNesting
 
             # if user is created, congratulations, send them to login
-            redirect_to login_path, notice: 'Successfully created an account, you may now log in.'
+            redirect_to login_path, notice: I18n.t('users.successfully_created_an_account_you_may_now_log_in')
           else
 
             # if it fails, eth address is already in database, go to login
-            redirect_to login_path, alert: 'Account already exists! Try to log in instead!'
+            redirect_to login_path, alert: I18n.t('users.account_already_exists_try_to_log_in_instead')
           end
         else
 
