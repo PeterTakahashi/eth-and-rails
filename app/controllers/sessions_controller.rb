@@ -1,14 +1,12 @@
-require "eth"
-require "time"
+require 'eth'
+require 'time'
 
 class SessionsController < ApplicationController
-
   # no need to initialize the session
   def new; end
 
   # logs in a user using an ethereum account
   def create
-
     # users are indexed by eth address here
     user = User.find_by(eth_address: params[:eth_address])
 
@@ -28,13 +26,13 @@ class SessionsController < ApplicationController
 
         # we embedded the time of the request in the signed message and make sure
         # it's not older than 5 minutes. expired signatures will be rejected.
-        custom_title, request_time, signed_nonce = message.split(",")
+        custom_title, request_time, signed_nonce = message.split(',')
         request_time = Time.at(request_time.to_f / 1000.0)
         expiry_time = request_time + 300
 
         # also make sure the parsed request_time is sane
         # (not nil, not 0, not off by orders of magnitude)
-        sane_checkpoint = Time.parse "2021-01-01 00:00:00 UTC"
+        sane_checkpoint = Time.parse '2021-01-01 00:00:00 UTC'
         if request_time and request_time > sane_checkpoint and Time.now < expiry_time
 
           # enforce that the signed nonce is the one we have on record
@@ -57,43 +55,42 @@ class SessionsController < ApplicationController
               user.save
 
               # send the logged in user back home
-              redirect_to root_path, notice: "Logged in successfully!"
+              redirect_to root_path, notice: 'Logged in successfully!'
             else
 
               # signature address does not match our records
-              flash.now[:alert] = "Signature verification failed!"
+              flash.now[:alert] = 'Signature verification failed!'
               render :new
             end
           else
 
             # signed nonce mismatches with the nonce on record
-            flash.now[:alert] = "Signed nonce does not match!"
+            flash.now[:alert] = 'Signed nonce does not match!'
             render :new
           end
         else
 
           # signature expired, older than 5 minutes
-          flash.now[:alert] = "Signature expired, please try again!"
+          flash.now[:alert] = 'Signature expired, please try again!'
           render :new
         end
       else
 
         # user did not sign the message
-        flash.now[:alert] = "Please, sign the message in your Ethereum wallet!"
+        flash.now[:alert] = 'Please, sign the message in your Ethereum wallet!'
         render :new
       end
     else
 
       # user not found in database
-      redirect_to signup_path, alert: "No such user exists, try to sign up!"
+      redirect_to signup_path, alert: 'No such user exists, try to sign up!'
     end
   end
 
   # logs out the user
   def destroy
-
     # deletes user session
     session[:user_id] = nil
-    redirect_to root_path, notice: "Logged out."
+    redirect_to root_path, notice: 'Logged out.'
   end
 end

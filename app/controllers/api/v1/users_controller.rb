@@ -1,7 +1,6 @@
-require "eth"
+require 'eth'
 
 class Api::V1::UsersController < ApiController
-
   # do not allow to index all users
   def index
     render json: nil

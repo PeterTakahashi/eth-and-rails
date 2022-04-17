@@ -1,7 +1,6 @@
-require "eth"
+require 'eth'
 
 class UsersController < ApplicationController
-
   # instantiate a new user
   def new
     @user = User.new
@@ -9,7 +8,6 @@ class UsersController < ApplicationController
 
   # create a new user based on user input
   def create
-
     # create new user from allowed params
     @user = User.new(user_params)
 
@@ -35,36 +33,36 @@ class UsersController < ApplicationController
           if @user.save
 
             # if user is created, congratulations, send them to login
-            redirect_to login_path, notice: "Successfully created an account, you may now log in."
+            redirect_to login_path, notice: 'Successfully created an account, you may now log in.'
           else
 
             # if it fails, eth address is already in database, go to login
-            redirect_to login_path, alert: "Account already exists! Try to log in instead!"
+            redirect_to login_path, alert: 'Account already exists! Try to log in instead!'
           end
         else
 
           # if it fails, the eth address is not valid, stay on signup
-          flash.now[:alert] = "Invalid Ethereum address!"
+          flash.now[:alert] = 'Invalid Ethereum address!'
           render :new
         end
       else
 
         # if it fails, the process was interupted, stay on signup
-        flash.now[:alert] = "Failed to get Ethereum address!"
+        flash.now[:alert] = 'Failed to get Ethereum address!'
         render :new
       end
     else
 
       # if it fails, the user did not specify a name, stay on signup
-      flash.now[:alert] = "Please choose a name (length > 0)!"
+      flash.now[:alert] = 'Please choose a name (length > 0)!'
       render :new
     end
   end
 
   private
 
-  def user_params
-    # only allow user to control name, message, signature, and address
-    params.require(:user).permit(:username, :eth_address)
-  end
+    def user_params
+      # only allow user to control name, message, signature, and address
+      params.require(:user).permit(:username, :eth_address)
+    end
 end
